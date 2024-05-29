@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Generic, List, TypeVar
+from typing import TYPE_CHECKING, Generic, List, Literal, TypeVar
 
 import numpy as np
 import sapien.physx as physx
@@ -134,7 +134,19 @@ class PhysxRigidBodyComponentStruct(PhysxRigidBaseComponentStruct[T], Generic[T]
 
     # TODO: To be added
     # def add_force_at_point(self, force: numpy.ndarray[numpy.float32, _Shape, _Shape[3]], point: numpy.ndarray[numpy.float32, _Shape, _Shape[3]], mode: typing.Literal['force', 'acceleration', 'velocity_change', 'impulse'] = 'force') -> None: ...
-    # def add_force_torque(self, force: numpy.ndarray[numpy.float32, _Shape, _Shape[3]], torque: numpy.ndarray[numpy.float32, _Shape, _Shape[3]], mode: typing.Literal['force', 'acceleration', 'velocity_change', 'impulse'] = 'force') -> None: ...
+    def add_force_torque(
+        self,
+        force: Array,
+        torque: Array,
+        mode: Literal["force", "acceleration", "velocity_change", "impulse"] = "force",
+    ) -> None:
+        if physx.is_gpu_enabled():
+            force = common.to_tensor(force)
+            self.px.cuda_rigid_dynamic_force.torch()
+            self.px.cuda_rigid_dynamic_torque.torch()
+            self.px.gpu_apply_rigid_dynamic_force()
+            self.px.gpu_apply_rigid_dynamic_torque()
+
     def get_angular_damping(self) -> float:
         return self.angular_damping
 
