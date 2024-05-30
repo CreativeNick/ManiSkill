@@ -154,7 +154,7 @@ class ActorBuilder(SAPIENActorBuilder):
             component.mass = self._mass
             component.cmass_local_pose = self._cmass_local_pose
             component.inertia = self._inertia
-
+        component.name = self.name
         return component
 
     def build_kinematic(self, name):

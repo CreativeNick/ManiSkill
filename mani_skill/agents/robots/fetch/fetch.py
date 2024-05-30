@@ -382,6 +382,7 @@ class Fetch(BaseAgent):
             contacts = (
                 query.cuda_impulses.torch().clone().reshape((-1, *contacts_shape))
             )
+            print(contacts.max(), contacts.min())
             lforce = torch.linalg.norm(contacts[0], axis=1)
             rforce = torch.linalg.norm(contacts[1], axis=1)
 
@@ -430,6 +431,7 @@ class Fetch(BaseAgent):
                     self.finger2_link._bodies[0].entity,
                     object._bodies[0].entity,
                 )
+                print(limpulse, rimpulse)
 
                 # direction to open the gripper
                 ldirection = -self.finger1_link.pose.to_transformation_matrix()[
