@@ -39,7 +39,7 @@ env: PickSubtaskTrainEnv = gym.make(
     render_mode="cameras",
     shader_dir="default",
     robot_uids="fetch",
-    sim_backend="cpu",
+    sim_backend="gpu",
     # time limit
     max_episode_steps=100,
     # SequentialTaskEnv args

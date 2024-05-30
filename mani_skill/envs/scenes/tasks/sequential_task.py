@@ -1,10 +1,10 @@
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
 import sapien
 import torch
 import torch.random
-import numpy as np
 
 from mani_skill.agents.robots import Fetch
 from mani_skill.envs.scenes.base_env import SceneManipulationEnv
@@ -18,12 +18,12 @@ from mani_skill.utils.structs.types import GPUMemoryConfig, SimConfig
 from mani_skill.utils.visualization.misc import observations_to_images, tile_images
 
 from .planner import (
+    NavigateSubtask,
+    NavigateSubtaskConfig,
     PickSubtask,
     PickSubtaskConfig,
     PlaceSubtask,
     PlaceSubtaskConfig,
-    NavigateSubtask,
-    NavigateSubtaskConfig,
     Subtask,
     SubtaskConfig,
     TaskPlan,
@@ -379,12 +379,13 @@ class SequentialTaskEnv(SceneManipulationEnv):
         for subtask_num in currently_running_subtasks:
             subtask: Subtask = self.task_plan[subtask_num]
             env_idx = torch.where(self.subtask_pointer == subtask_num)[0]
+            # import ipdb;ipdb.set_trace()
             if isinstance(subtask, PickSubtask):
                 (
                     subtask_success[env_idx],
                     subtask_success_checkers,
                 ) = self._pick_check_success(
-                    self.subtask_objs[subtask_num],
+                    self.scene_builder.scene_objects["env-0_005_tomato_soup_can-1"],
                     env_idx,
                     ee_rest_thresh=self.pick_cfg.ee_rest_thresh,
                 )
@@ -428,6 +429,7 @@ class SequentialTaskEnv(SceneManipulationEnv):
         ee_rest_thresh: float = 0.05,
     ):
         is_grasped = self.agent.is_grasping(obj, max_angle=85)[env_idx]
+        print(is_grasped)
         ee_rest = (
             torch.norm(
                 self.agent.tcp_pose.p[env_idx] - self.ee_rest_world_pose.p[env_idx],
