@@ -121,6 +121,8 @@ class SequentialTaskEnv(SceneManipulationEnv):
 
     def process_task_plan(self, sampled_subtask_lists: List[List[Subtask]]):
 
+        self.agent.queries = dict()
+
         self.subtask_objs: List[Actor] = []
         self.subtask_goals: List[Actor] = []
 
@@ -403,34 +405,7 @@ class SequentialTaskEnv(SceneManipulationEnv):
         )
         subtask_type[~success] = self.task_ids[self.subtask_pointer[[~success]]]
 
-        #####################################################################
-        # TODO (arth): DELETE THIS
-        # DEBUGGING STUFF
-
-        query, contacts_shape = self.agent.queries[self.subtask_objs[0].name]
-        self.scene.px.gpu_query_contact_pair_impulses(query)
-        # query.cuda_contacts # (num_unique_pairs * num_envs, 3)
-        contacts = query.cuda_impulses.torch().clone().reshape((-1, *contacts_shape))
-        lforce = torch.linalg.norm(contacts[0], axis=1)
-        rforce = torch.linalg.norm(contacts[1], axis=1)
-
-        # NOTE (stao): 0.5 * time_step is a decent value when tested on a pick cube task.
-        min_force = 0.5 * self.scene.px.timestep
-
-        # direction to open the gripper
-        ldirection = -self.agent.finger1_link.pose.to_transformation_matrix()[
-            ..., :3, 1
-        ]
-        rdirection = self.agent.finger2_link.pose.to_transformation_matrix()[..., :3, 1]
-        langle = torch.rad2deg(common.compute_angle_between(ldirection, contacts[0]))
-        rangle = torch.rad2deg(common.compute_angle_between(rdirection, contacts[1]))
-        #####################################################################
-
         return dict(
-            lforce=lforce,
-            rforce=rforce,
-            langle=langle,
-            rangle=rangle,
             success=success,
             fail=fail,
             subtask=self.subtask_pointer,
