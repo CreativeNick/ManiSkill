@@ -24,12 +24,15 @@ class Subtask:
 @dataclass
 class SubtaskConfig:
     task_id: int
-    horizon: int = -1
+    horizon: int = 200
+    ee_rest_thresh: float = 0.05
     robot_init_qpos_noise: float = 0.2
-    robot_resting_qpos_tolerance: float = 0.6
+    robot_resting_qpos_tolerance: float = 0.2
+    robot_resting_qpos_tolerance_grasping: float = 0.6
 
     def __post_init__(self):
         assert self.horizon > 0
+        assert self.ee_rest_thresh >= 0
 
 
 @dataclass
@@ -44,11 +47,6 @@ class PickSubtask(Subtask):
 @dataclass
 class PickSubtaskConfig(SubtaskConfig):
     task_id: int = 0
-    horizon: int = 200
-    ee_rest_thresh: float = 0.05
-
-    def __post_init__(self):
-        assert self.ee_rest_thresh >= 0
 
 
 @dataclass
@@ -66,13 +64,11 @@ class PlaceSubtask(Subtask):
 @dataclass
 class PlaceSubtaskConfig(SubtaskConfig):
     task_id: int = 1
-    horizon: int = 200
-    ee_rest_thresh: float = 0.05
     obj_goal_thresh: float = 0.15
 
     def __post_init__(self):
+        super().__post_init__()
         assert self.obj_goal_thresh >= 0
-        assert self.ee_rest_thresh >= 0
 
 
 @dataclass
@@ -92,12 +88,7 @@ class NavigateSubtask(Subtask):
 @dataclass
 class NavigateSubtaskConfig(SubtaskConfig):
     task_id: int = 2
-    horizon: int = 200
-    ee_rest_thresh: float = 0.05
     navigated_sucessfully_dist: float = 2
-
-    def __post_init__(self):
-        assert self.ee_rest_thresh >= 0
 
 
 @dataclass

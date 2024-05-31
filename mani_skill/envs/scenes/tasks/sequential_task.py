@@ -59,7 +59,7 @@ class SequentialTaskEnv(SceneManipulationEnv):
     SUPPORTED_ROBOTS = ["fetch"]
     agent: Fetch
 
-    # TODO (arth): add locomotion, open fridge, close fridge
+    # TODO (arth): add open/close articulation tasks
     EE_REST_POS_WRT_BASE = (0.5, 0, 1.25)
     pick_cfg = PickSubtaskConfig(
         horizon=200,
@@ -486,7 +486,7 @@ class SequentialTaskEnv(SceneManipulationEnv):
             self.agent.robot.qpos[env_idx, 3:-2] - self.resting_qpos
         )
         robot_rest = torch.all(
-            robot_rest_dist < self.pick_cfg.robot_resting_qpos_tolerance, dim=1
+            robot_rest_dist < self.pick_cfg.robot_resting_qpos_tolerance_grasping, dim=1
         )
         is_static = self.agent.is_static(threshold=0.2)[env_idx]
         return (
@@ -539,7 +539,7 @@ class SequentialTaskEnv(SceneManipulationEnv):
 
     def _navigate_check_success(
         self,
-        obj: Union[None, Actor],
+        obj: Union[Actor, None],
         goal: Actor,
         env_idx: torch.Tensor,
         ee_rest_thresh: float = 0.05,
@@ -568,9 +568,12 @@ class SequentialTaskEnv(SceneManipulationEnv):
         robot_rest_dist = torch.abs(
             self.agent.robot.qpos[env_idx, 3:-2] - self.resting_qpos
         )
-        robot_rest = torch.all(
-            robot_rest_dist < self.pick_cfg.robot_resting_qpos_tolerance, dim=1
+        rest_tolerance = (
+            self.pick_cfg.robot_resting_qpos_tolerance
+            if obj is None
+            else self.pick_cfg.robot_resting_qpos_tolerance_grasping
         )
+        robot_rest = torch.all(robot_rest_dist < rest_tolerance, dim=1)
         is_static = self.agent.is_static(threshold=0.2)[env_idx]
         navigate_success = (
             oriented_correctly & navigated_close & ee_rest & robot_rest & is_static
